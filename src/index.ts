@@ -1,9 +1,10 @@
 import { Hono } from 'hono'
 
-const app = new Hono().basePath('/api')
+const honoApp = new Hono();
+const apiApp = honoApp.basePath('/api')
 
-app.get('/', (c) => {
+apiApp.get('/', (c) => {
   return c.text('Hello Hono!')
 })
 
-export default app
+export default honoApp
