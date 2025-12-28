@@ -1,66 +1,699 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+"use client"
+import { useState, useRef, useEffect, CSSProperties } from 'react';
+import { Send, Menu, Users, Hash, Settings, LogOut, Smile, Paperclip, MoreVertical } from 'lucide-react';
 
-export default function Home() {
+interface Message {
+  id: number;
+  text: string;
+  sender: string;
+  avatar: string;
+  time: string;
+  color: string;
+}
+
+interface User {
+  name: string;
+  avatar: string;
+  status: 'online' | 'away';
+}
+
+interface Room {
+  name: string;
+  icon: string;
+  unread: number;
+  active: boolean;
+}
+
+interface CurrentUser {
+  name: string;
+  avatar: string;
+  color: string;
+}
+
+export default function ChatApp() {
+  const [messages, setMessages] = useState<Message[]>([
+    { id: 1, text: 'みなさん、こんにちは！', sender: '田中太郎', avatar: '🧑', time: '10:30', color: '#3b82f6' },
+    { id: 2, text: 'おはようございます！', sender: '山田花子', avatar: '👩', time: '10:31', color: '#ec4899' },
+    { id: 3, text: 'プロジェクトの進捗について話し合いましょう', sender: '佐藤次郎', avatar: '👨', time: '10:32', color: '#10b981' },
+  ]);
+  const [input, setInput] = useState<string>('');
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
+  const [currentUser] = useState<CurrentUser>({ name: '自分', avatar: '😊', color: '#a855f7' });
+  const [onlineUsers] = useState<User[]>([
+    { name: '田中太郎', avatar: '🧑', status: 'online' },
+    { name: '山田花子', avatar: '👩', status: 'online' },
+    { name: '佐藤次郎', avatar: '👨', status: 'online' },
+    { name: '鈴木一郎', avatar: '🧔', status: 'away' },
+    { name: '高橋美咲', avatar: '👧', status: 'online' },
+  ]);
+  const [rooms] = useState<Room[]>([
+    { name: '一般', icon: '💬', unread: 0, active: true },
+    { name: 'プロジェクトA', icon: '📊', unread: 3, active: false },
+    { name: 'デザイン', icon: '🎨', unread: 0, active: false },
+    { name: 'エンジニアリング', icon: '⚙️', unread: 7, active: false },
+    { name: '雑談', icon: '☕', unread: 0, active: false },
+  ]);
+  const [isTyping] = useState<string[]>(['山田花子']);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = (): void => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const handleSend = (): void => {
+    if (input.trim()) {
+      const newMessage: Message = {
+        id: messages.length + 1,
+        text: input,
+        sender: currentUser.name,
+        avatar: currentUser.avatar,
+        time: new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }),
+        color: currentUser.color
+      };
+      setMessages([...messages, newMessage]);
+      setInput('');
+
+      setTimeout(() => {
+        const responses = [
+          { text: 'いいですね！', sender: '田中太郎', avatar: '🧑', color: '#3b82f6' },
+          { text: '賛成です', sender: '山田花子', avatar: '👩', color: '#ec4899' },
+          { text: 'それで進めましょう', sender: '佐藤次郎', avatar: '👨', color: '#10b981' },
+        ];
+        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+        const aiResponse: Message = {
+          id: messages.length + 2,
+          text: randomResponse.text,
+          sender: randomResponse.sender,
+          avatar: randomResponse.avatar,
+          time: new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }),
+          color: randomResponse.color
+        };
+        setMessages(prev => [...prev, aiResponse]);
+      }, 2000);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>): void => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.tsx file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div style={styles.container}>
+      {/* 左サイドバー - ルーム一覧 */}
+      <div style={{...styles.leftSidebar, width: isSidebarOpen ? '256px' : '0'}}>
+        <div style={styles.sidebarHeader}>
+          <h2 style={styles.workspaceTitle}>
+            <Hash color="#a855f7" size={24} style={{marginRight: '8px'}} />
+            ワークスペース
+          </h2>
         </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        
+        <div style={styles.roomsContainer}>
+          <div style={styles.roomsContent}>
+            <h3 style={styles.roomsLabel}>チャンネル</h3>
+            <div style={styles.roomsList}>
+              {rooms.map((room, idx) => (
+                <div 
+                  key={idx} 
+                  style={room.active ? styles.roomItemActive : styles.roomItem}
+                >
+                  <div style={styles.roomInfo}>
+                    <span style={{fontSize: '16px'}}>{room.icon}</span>
+                    <span style={styles.roomName}>{room.name}</span>
+                  </div>
+                  {room.unread > 0 && (
+                    <span style={styles.unreadBadge}>
+                      {room.unread}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
-      </main>
+
+        <div style={styles.sidebarFooter}>
+          <button style={styles.footerButton}>
+            <Settings size={18} />
+            <span style={styles.footerButtonText}>設定</span>
+          </button>
+          <button style={styles.footerButton}>
+            <LogOut size={18} />
+            <span style={styles.footerButtonText}>ログアウト</span>
+          </button>
+        </div>
+      </div>
+
+      {/* メインチャットエリア */}
+      <div style={styles.mainContent}>
+        {/* ヘッダー */}
+        <div style={styles.header}>
+          <div style={styles.headerLeft}>
+            <button 
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              style={styles.menuButton}
+            >
+              <Menu size={24} />
+            </button>
+            <div style={styles.channelInfo}>
+              <span style={{fontSize: '24px', marginRight: '8px'}}>💬</span>
+              <div>
+                <h1 style={styles.channelName}>一般</h1>
+                <p style={styles.onlineCount}>{onlineUsers.length}人がオンライン</p>
+              </div>
+            </div>
+          </div>
+          <button style={styles.moreButton}>
+            <MoreVertical size={24} />
+          </button>
+        </div>
+
+        {/* メッセージエリア */}
+        <div style={styles.messagesArea}>
+          {messages.map((message) => (
+            <div key={message.id} style={styles.messageRow} className="message-group">
+              <div style={styles.messageAvatar}>
+                {message.avatar}
+              </div>
+              <div style={styles.messageContent}>
+                <div style={styles.messageHeader}>
+                  <span style={{...styles.messageSender, color: message.color}}>
+                    {message.sender}
+                  </span>
+                  <span style={styles.messageTime}>{message.time}</span>
+                </div>
+                <div style={styles.messageText}>
+                  {message.text}
+                </div>
+              </div>
+              <button style={styles.messageMoreButton} className="message-more">
+                <MoreVertical size={16} />
+              </button>
+            </div>
+          ))}
+          
+          {isTyping.length > 0 && (
+            <div style={styles.typingIndicator}>
+              <div style={styles.typingAvatar}>
+                👩
+              </div>
+              <div style={styles.typingInfo}>
+                <span style={styles.typingText}>{isTyping[0]}が入力中</span>
+                <div style={styles.typingDots}>
+                  <div style={{...styles.typingDot, animationDelay: '0ms'}}></div>
+                  <div style={{...styles.typingDot, animationDelay: '150ms'}}></div>
+                  <div style={{...styles.typingDot, animationDelay: '300ms'}}></div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* 入力エリア */}
+        <div style={styles.inputArea}>
+          <div style={styles.inputContainer}>
+            <div style={styles.inputWrapper}>
+              <button style={styles.inputButton}>
+                <Paperclip size={20} />
+              </button>
+              <textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="メッセージを #一般 に送信"
+                rows={1}
+                style={styles.textarea}
+              />
+              <button style={styles.inputButton}>
+                <Smile size={20} />
+              </button>
+              <button
+                onClick={handleSend}
+                disabled={!input.trim()}
+                style={input.trim() ? styles.sendButton : styles.sendButtonDisabled}
+              >
+                <Send size={20} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 右サイドバー - オンラインユーザー */}
+      <div style={styles.rightSidebar}>
+        <div style={styles.usersHeader}>
+          <h3 style={styles.usersTitle}>
+            <Users size={18} style={{marginRight: '8px'}} />
+            オンライン — {onlineUsers.filter(u => u.status === 'online').length}
+          </h3>
+        </div>
+        <div style={styles.usersList}>
+          {onlineUsers.map((user, idx) => (
+            <div key={idx} style={styles.userItem}>
+              <div style={styles.userAvatarWrapper}>
+                <div style={styles.userAvatar}>
+                  {user.avatar}
+                </div>
+                <div style={user.status === 'online' ? styles.statusOnline : styles.statusAway}></div>
+              </div>
+              <div style={styles.userInfo}>
+                <p style={styles.userName}>{user.name}</p>
+                <p style={styles.userStatus}>
+                  {user.status === 'online' ? 'オンライン' : '離席中'}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @keyframes bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-5px); }
+        }
+        .message-group .message-more {
+          opacity: 0;
+          transition: opacity 0.2s;
+        }
+        .message-group:hover .message-more {
+          opacity: 1;
+        }
+      `}</style>
     </div>
   );
 }
+
+const styles: { [key: string]: CSSProperties } = {
+  container: {
+    display: 'flex',
+    height: '100vh',
+    backgroundColor: '#0f172a',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+  },
+  leftSidebar: {
+    transition: 'width 0.3s',
+    backgroundColor: '#1e293b',
+    borderRight: '1px solid #334155',
+    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  sidebarHeader: {
+    padding: '16px',
+    borderBottom: '1px solid #334155',
+  },
+  workspaceTitle: {
+    fontSize: '20px',
+    fontWeight: 'bold',
+    color: 'white',
+    display: 'flex',
+    alignItems: 'center',
+    margin: 0,
+  },
+  roomsContainer: {
+    flex: 1,
+    overflowY: 'auto',
+  },
+  roomsContent: {
+    padding: '16px',
+  },
+  roomsLabel: {
+    fontSize: '12px',
+    fontWeight: '600',
+    color: '#9ca3af',
+    textTransform: 'uppercase',
+    marginBottom: '8px',
+  },
+  roomsList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+  },
+  roomItem: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '8px',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    transition: 'background-color 0.2s',
+    backgroundColor: 'transparent',
+    color: '#d1d5db',
+  },
+  roomItemActive: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '8px',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    backgroundColor: '#9333ea',
+    color: 'white',
+  },
+  roomInfo: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  },
+  roomName: {
+    fontSize: '14px',
+    fontWeight: '500',
+  },
+  unreadBadge: {
+    backgroundColor: '#ef4444',
+    color: 'white',
+    fontSize: '12px',
+    borderRadius: '12px',
+    padding: '2px 8px',
+  },
+  sidebarFooter: {
+    padding: '16px',
+    borderTop: '1px solid #334155',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+  },
+  footerButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '8px',
+    borderRadius: '6px',
+    border: 'none',
+    backgroundColor: 'transparent',
+    color: '#d1d5db',
+    cursor: 'pointer',
+    transition: 'background-color 0.2s',
+    width: '100%',
+  },
+  footerButtonText: {
+    fontSize: '14px',
+  },
+  mainContent: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  header: {
+    backgroundColor: '#1e293b',
+    borderBottom: '1px solid #334155',
+    padding: '16px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  headerLeft: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+  },
+  menuButton: {
+    padding: '8px',
+    borderRadius: '6px',
+    border: 'none',
+    backgroundColor: 'transparent',
+    color: '#d1d5db',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    transition: 'background-color 0.2s',
+  },
+  channelInfo: {
+    display: 'flex',
+    alignItems: 'center',
+  },
+  channelName: {
+    fontSize: '18px',
+    fontWeight: '600',
+    color: 'white',
+    margin: 0,
+  },
+  onlineCount: {
+    fontSize: '12px',
+    color: '#9ca3af',
+    margin: 0,
+  },
+  moreButton: {
+    padding: '8px',
+    borderRadius: '6px',
+    border: 'none',
+    backgroundColor: 'transparent',
+    color: '#d1d5db',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    transition: 'background-color 0.2s',
+  },
+  messagesArea: {
+    flex: 1,
+    overflowY: 'auto',
+    padding: '24px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '16px',
+  },
+  messageRow: {
+    display: 'flex',
+    gap: '12px',
+    animation: 'fade-in 0.3s ease-out',
+  },
+  messageAvatar: {
+    width: '40px',
+    height: '40px',
+    borderRadius: '50%',
+    background: 'linear-gradient(135deg, #a855f7, #ec4899)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '20px',
+    flexShrink: 0,
+  },
+  messageContent: {
+    flex: 1,
+  },
+  messageHeader: {
+    display: 'flex',
+    alignItems: 'baseline',
+    gap: '8px',
+    marginBottom: '4px',
+  },
+  messageSender: {
+    fontWeight: '600',
+    fontSize: '15px',
+  },
+  messageTime: {
+    fontSize: '12px',
+    color: '#6b7280',
+  },
+  messageText: {
+    color: '#e5e7eb',
+    lineHeight: '1.5',
+    fontSize: '15px',
+  },
+  messageMoreButton: {
+    padding: '8px',
+    borderRadius: '6px',
+    border: 'none',
+    backgroundColor: 'transparent',
+    color: '#9ca3af',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+  },
+  typingIndicator: {
+    display: 'flex',
+    gap: '12px',
+    animation: 'fade-in 0.3s ease-out',
+  },
+  typingAvatar: {
+    width: '40px',
+    height: '40px',
+    borderRadius: '50%',
+    background: 'linear-gradient(135deg, #ec4899, #a855f7)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '20px',
+  },
+  typingInfo: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  },
+  typingText: {
+    fontSize: '14px',
+    color: '#9ca3af',
+  },
+  typingDots: {
+    display: 'flex',
+    gap: '4px',
+  },
+  typingDot: {
+    width: '8px',
+    height: '8px',
+    backgroundColor: '#9ca3af',
+    borderRadius: '50%',
+    animation: 'bounce 1.4s infinite ease-in-out',
+  },
+  inputArea: {
+    padding: '16px',
+    backgroundColor: '#1e293b',
+    borderTop: '1px solid #334155',
+  },
+  inputContainer: {
+    maxWidth: '1024px',
+    margin: '0 auto',
+  },
+  inputWrapper: {
+    display: 'flex',
+    gap: '8px',
+    alignItems: 'flex-end',
+    backgroundColor: '#334155',
+    borderRadius: '8px',
+    padding: '8px',
+  },
+  inputButton: {
+    padding: '8px',
+    borderRadius: '6px',
+    border: 'none',
+    backgroundColor: 'transparent',
+    color: '#9ca3af',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    transition: 'background-color 0.2s',
+  },
+  textarea: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    border: 'none',
+    outline: 'none',
+    color: 'white',
+    fontSize: '15px',
+    resize: 'none',
+    minHeight: '24px',
+    maxHeight: '200px',
+    fontFamily: 'inherit',
+  },
+  sendButton: {
+    padding: '8px',
+    borderRadius: '6px',
+    border: 'none',
+    backgroundColor: '#9333ea',
+    color: 'white',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    transition: 'background-color 0.2s',
+  },
+  sendButtonDisabled: {
+    padding: '8px',
+    borderRadius: '6px',
+    border: 'none',
+    backgroundColor: '#9333ea',
+    color: 'white',
+    cursor: 'not-allowed',
+    display: 'flex',
+    alignItems: 'center',
+    opacity: 0.5,
+  },
+  rightSidebar: {
+    width: '256px',
+    backgroundColor: '#1e293b',
+    borderLeft: '1px solid #334155',
+    overflowY: 'auto',
+  },
+  usersHeader: {
+    padding: '16px',
+    borderBottom: '1px solid #334155',
+  },
+  usersTitle: {
+    fontSize: '14px',
+    fontWeight: '600',
+    color: 'white',
+    display: 'flex',
+    alignItems: 'center',
+    margin: 0,
+  },
+  usersList: {
+    padding: '16px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+  },
+  userItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '8px',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    transition: 'background-color 0.2s',
+  },
+  userAvatarWrapper: {
+    position: 'relative',
+  },
+  userAvatar: {
+    width: '32px',
+    height: '32px',
+    borderRadius: '50%',
+    background: 'linear-gradient(135deg, #a855f7, #ec4899)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '16px',
+  },
+  statusOnline: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: '12px',
+    height: '12px',
+    borderRadius: '50%',
+    border: '2px solid #1e293b',
+    backgroundColor: '#10b981',
+  },
+  statusAway: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: '12px',
+    height: '12px',
+    borderRadius: '50%',
+    border: '2px solid #1e293b',
+    backgroundColor: '#eab308',
+  },
+  userInfo: {
+    flex: 1,
+  },
+  userName: {
+    fontSize: '14px',
+    color: '#e5e7eb',
+    margin: 0,
+  },
+  userStatus: {
+    fontSize: '12px',
+    color: '#6b7280',
+    margin: 0,
+  },
+};
