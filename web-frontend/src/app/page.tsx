@@ -1,6 +1,6 @@
 "use client"
 import { useState, useRef, useEffect, CSSProperties } from 'react';
-import { Send, Menu, Users, Hash, Settings, LogOut, Smile, Paperclip, MoreVertical } from 'lucide-react';
+import { Send, Menu, Users, Hash, Settings, LogOut, Smile, Paperclip, MoreVertical, Plus, Lock, Globe, ArrowRight } from 'lucide-react';
 
 interface Message {
   id: number;
@@ -18,6 +18,16 @@ interface User {
 }
 
 interface Room {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  memberCount: number;
+  isPrivate: boolean;
+  lastActivity: string;
+}
+
+interface Channel {
   name: string;
   icon: string;
   unread: number;
@@ -30,7 +40,13 @@ interface CurrentUser {
   color: string;
 }
 
+type Screen = 'login' | 'roomList' | 'chat';
+
 export default function ChatApp() {
+  const [currentScreen, setCurrentScreen] = useState<Screen>('login');
+  const [username, setUsername] = useState<string>('');
+  const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
+  
   const [messages, setMessages] = useState<Message[]>([
     { id: 1, text: 'みなさん、こんにちは！', sender: '田中太郎', avatar: '🧑', time: '10:30', color: '#3b82f6' },
     { id: 2, text: 'おはようございます！', sender: '山田花子', avatar: '👩', time: '10:31', color: '#ec4899' },
@@ -38,7 +54,7 @@ export default function ChatApp() {
   ]);
   const [input, setInput] = useState<string>('');
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
-  const [currentUser] = useState<CurrentUser>({ name: '自分', avatar: '😊', color: '#a855f7' });
+  const [currentUser, setCurrentUser] = useState<CurrentUser>({ name: '自分', avatar: '😊', color: '#a855f7' });
   const [onlineUsers] = useState<User[]>([
     { name: '田中太郎', avatar: '🧑', status: 'online' },
     { name: '山田花子', avatar: '👩', status: 'online' },
@@ -46,12 +62,68 @@ export default function ChatApp() {
     { name: '鈴木一郎', avatar: '🧔', status: 'away' },
     { name: '高橋美咲', avatar: '👧', status: 'online' },
   ]);
-  const [rooms] = useState<Room[]>([
+  const [channels] = useState<Channel[]>([
     { name: '一般', icon: '💬', unread: 0, active: true },
     { name: 'プロジェクトA', icon: '📊', unread: 3, active: false },
     { name: 'デザイン', icon: '🎨', unread: 0, active: false },
     { name: 'エンジニアリング', icon: '⚙️', unread: 7, active: false },
     { name: '雑談', icon: '☕', unread: 0, active: false },
+  ]);
+  const [availableRooms] = useState<Room[]>([
+    {
+      id: '1',
+      name: '一般チャット',
+      icon: '💬',
+      description: '誰でも参加できるオープンな雑談ルーム',
+      memberCount: 128,
+      isPrivate: false,
+      lastActivity: '2分前'
+    },
+    {
+      id: '2',
+      name: 'プロジェクトA',
+      icon: '📊',
+      description: 'プロジェクトAに関する議論・進捗報告',
+      memberCount: 24,
+      isPrivate: false,
+      lastActivity: '5分前'
+    },
+    {
+      id: '3',
+      name: 'デザインチーム',
+      icon: '🎨',
+      description: 'デザイン関連の相談・レビュー',
+      memberCount: 15,
+      isPrivate: true,
+      lastActivity: '15分前'
+    },
+    {
+      id: '4',
+      name: 'エンジニアリング',
+      icon: '⚙️',
+      description: '技術的な議論・コードレビュー',
+      memberCount: 42,
+      isPrivate: false,
+      lastActivity: '1分前'
+    },
+    {
+      id: '5',
+      name: '経営会議',
+      icon: '🏢',
+      description: '経営陣のみ参加可能',
+      memberCount: 8,
+      isPrivate: true,
+      lastActivity: '30分前'
+    },
+    {
+      id: '6',
+      name: 'ゲーム好き集まれ',
+      icon: '🎮',
+      description: 'ゲームの話題で盛り上がろう',
+      memberCount: 67,
+      isPrivate: false,
+      lastActivity: '3分前'
+    },
   ]);
   const [isTyping] = useState<string[]>(['山田花子']);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -63,6 +135,21 @@ export default function ChatApp() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  const handleLogin = (e: React.FormEvent): void => {
+    e.preventDefault();
+    if (username.trim()) {
+      const avatars = ['😊', '🙂', '😎', '🤓', '🥳', '🤗', '😇'];
+      const randomAvatar = avatars[Math.floor(Math.random() * avatars.length)];
+      setCurrentUser({ name: username, avatar: randomAvatar, color: '#a855f7' });
+      setCurrentScreen('roomList');
+    }
+  };
+
+  const handleJoinRoom = (room: Room): void => {
+    setSelectedRoom(room);
+    setCurrentScreen('chat');
+  };
 
   const handleSend = (): void => {
     if (input.trim()) {
@@ -104,14 +191,108 @@ export default function ChatApp() {
     }
   };
 
+  // ログイン画面
+  if (currentScreen === 'login') {
+    return (
+      <div style={styles.loginContainer}>
+        <div style={styles.loginCard}>
+          <div style={styles.loginHeader}>
+            <div style={styles.loginIcon}>💬</div>
+            <h1 style={styles.loginTitle}>ChatRoom</h1>
+            <p style={styles.loginSubtitle}>リアルタイムチャットアプリケーション</p>
+          </div>
+          <form onSubmit={handleLogin} style={styles.loginForm}>
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>ユーザー名</label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="名前を入力してください"
+                style={styles.input}
+                autoFocus
+              />
+            </div>
+            <button type="submit" style={styles.loginButton} disabled={!username.trim()}>
+              <span>ルーム一覧へ</span>
+              <ArrowRight size={20} />
+            </button>
+          </form>
+          <div style={styles.loginFooter}>
+            <p style={styles.loginFooterText}>
+              ユーザー名を入力して、チャットルームに参加しましょう
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Room一覧画面
+  if (currentScreen === 'roomList') {
+    return (
+      <div style={styles.roomListContainer}>
+        <div style={styles.roomListHeader}>
+          <div style={styles.roomListHeaderContent}>
+            <h1 style={styles.roomListTitle}>チャットルーム一覧</h1>
+            <p style={styles.roomListSubtitle}>参加したいルームを選択してください</p>
+          </div>
+          <div style={styles.userBadge}>
+            <div style={styles.userBadgeAvatar}>{currentUser.avatar}</div>
+            <span style={styles.userBadgeName}>{currentUser.name}</span>
+          </div>
+        </div>
+        
+        <div style={styles.roomListContent}>
+          <div style={styles.roomGrid}>
+            {availableRooms.map((room) => (
+              <div
+                key={room.id}
+                style={styles.roomCard}
+                onClick={() => handleJoinRoom(room)}
+              >
+                <div style={styles.roomCardHeader}>
+                  <div style={styles.roomCardIcon}>{room.icon}</div>
+                  {room.isPrivate && (
+                    <div style={styles.privateBadge}>
+                      <Lock size={12} />
+                    </div>
+                  )}
+                </div>
+                <h3 style={styles.roomCardTitle}>{room.name}</h3>
+                <p style={styles.roomCardDescription}>{room.description}</p>
+                <div style={styles.roomCardFooter}>
+                  <div style={styles.roomCardInfo}>
+                    <Users size={16} />
+                    <span>{room.memberCount}人</span>
+                  </div>
+                  <div style={styles.roomCardActivity}>
+                    <div style={styles.activityDot}></div>
+                    <span>{room.lastActivity}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <button style={styles.createRoomButton}>
+          <Plus size={20} />
+          <span>新しいルームを作成</span>
+        </button>
+      </div>
+    );
+  }
+
+  // チャット画面
   return (
     <div style={styles.container}>
-      {/* 左サイドバー - ルーム一覧 */}
+      {/* 左サイドバー - チャンネル一覧 */}
       <div style={{...styles.leftSidebar, width: isSidebarOpen ? '256px' : '0'}}>
         <div style={styles.sidebarHeader}>
           <h2 style={styles.workspaceTitle}>
             <Hash color="#a855f7" size={24} style={{marginRight: '8px'}} />
-            ワークスペース
+            {selectedRoom?.name || 'ワークスペース'}
           </h2>
         </div>
         
@@ -119,18 +300,18 @@ export default function ChatApp() {
           <div style={styles.roomsContent}>
             <h3 style={styles.roomsLabel}>チャンネル</h3>
             <div style={styles.roomsList}>
-              {rooms.map((room, idx) => (
+              {channels.map((channel, idx) => (
                 <div 
                   key={idx} 
-                  style={room.active ? styles.roomItemActive : styles.roomItem}
+                  style={channel.active ? styles.channelItemActive : styles.channelItem}
                 >
-                  <div style={styles.roomInfo}>
-                    <span style={{fontSize: '16px'}}>{room.icon}</span>
-                    <span style={styles.roomName}>{room.name}</span>
+                  <div style={styles.channelInfo}>
+                    <span style={{fontSize: '16px'}}>{channel.icon}</span>
+                    <span style={styles.channelName}>{channel.name}</span>
                   </div>
-                  {room.unread > 0 && (
+                  {channel.unread > 0 && (
                     <span style={styles.unreadBadge}>
-                      {room.unread}
+                      {channel.unread}
                     </span>
                   )}
                 </div>
@@ -140,11 +321,15 @@ export default function ChatApp() {
         </div>
 
         <div style={styles.sidebarFooter}>
+          <button style={styles.footerButton} onClick={() => setCurrentScreen('roomList')}>
+            <ArrowRight size={18} style={{transform: 'rotate(180deg)'}} />
+            <span style={styles.footerButtonText}>ルーム一覧に戻る</span>
+          </button>
           <button style={styles.footerButton}>
             <Settings size={18} />
             <span style={styles.footerButtonText}>設定</span>
           </button>
-          <button style={styles.footerButton}>
+          <button style={styles.footerButton} onClick={() => setCurrentScreen('login')}>
             <LogOut size={18} />
             <span style={styles.footerButtonText}>ログアウト</span>
           </button>
@@ -165,7 +350,7 @@ export default function ChatApp() {
             <div style={styles.channelInfo}>
               <span style={{fontSize: '24px', marginRight: '8px'}}>💬</span>
               <div>
-                <h1 style={styles.channelName}>一般</h1>
+                <h1 style={styles.channelNameHeader}>一般</h1>
                 <p style={styles.onlineCount}>{onlineUsers.length}人がオンライン</p>
               </div>
             </div>
@@ -291,6 +476,10 @@ export default function ChatApp() {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-5px); }
         }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
         .message-group .message-more {
           opacity: 0;
           transition: opacity 0.2s;
@@ -304,6 +493,237 @@ export default function ChatApp() {
 }
 
 const styles: { [key: string]: CSSProperties } = {
+  // ログイン画面
+  loginContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '100vh',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+  },
+  loginCard: {
+    backgroundColor: 'white',
+    borderRadius: '16px',
+    padding: '48px',
+    maxWidth: '480px',
+    width: '100%',
+    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+  },
+  loginHeader: {
+    textAlign: 'center',
+    marginBottom: '32px',
+  },
+  loginIcon: {
+    fontSize: '64px',
+    marginBottom: '16px',
+  },
+  loginTitle: {
+    fontSize: '32px',
+    fontWeight: 'bold',
+    color: '#1f2937',
+    margin: '0 0 8px 0',
+  },
+  loginSubtitle: {
+    fontSize: '16px',
+    color: '#6b7280',
+    margin: 0,
+  },
+  loginForm: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '24px',
+  },
+  inputGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+  },
+  label: {
+    fontSize: '14px',
+    fontWeight: '600',
+    color: '#374151',
+  },
+  input: {
+    padding: '12px 16px',
+    fontSize: '16px',
+    border: '2px solid #e5e7eb',
+    borderRadius: '8px',
+    outline: 'none',
+    transition: 'border-color 0.2s',
+  },
+  loginButton: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
+    padding: '14px 24px',
+    fontSize: '16px',
+    fontWeight: '600',
+    color: 'white',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    transition: 'transform 0.2s, box-shadow 0.2s',
+  },
+  loginFooter: {
+    marginTop: '24px',
+    textAlign: 'center',
+  },
+  loginFooterText: {
+    fontSize: '14px',
+    color: '#6b7280',
+    margin: 0,
+  },
+
+  // Room一覧画面
+  roomListContainer: {
+    minHeight: '100vh',
+    backgroundColor: '#0f172a',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    padding: '24px',
+  },
+  roomListHeader: {
+    maxWidth: '1200px',
+    margin: '0 auto 32px',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  roomListHeaderContent: {
+    flex: 1,
+  },
+  roomListTitle: {
+    fontSize: '32px',
+    fontWeight: 'bold',
+    color: 'white',
+    margin: '0 0 8px 0',
+  },
+  roomListSubtitle: {
+    fontSize: '16px',
+    color: '#9ca3af',
+    margin: 0,
+  },
+  userBadge: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '12px 20px',
+    backgroundColor: '#1e293b',
+    borderRadius: '12px',
+    border: '1px solid #334155',
+  },
+  userBadgeAvatar: {
+    width: '40px',
+    height: '40px',
+    borderRadius: '50%',
+    background: 'linear-gradient(135deg, #a855f7, #ec4899)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '20px',
+  },
+  userBadgeName: {
+    fontSize: '16px',
+    fontWeight: '600',
+    color: 'white',
+  },
+  roomListContent: {
+    maxWidth: '1200px',
+    margin: '0 auto',
+  },
+  roomGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+    gap: '24px',
+  },
+  roomCard: {
+    backgroundColor: '#1e293b',
+    borderRadius: '12px',
+    padding: '24px',
+    border: '1px solid #334155',
+    cursor: 'pointer',
+    transition: 'transform 0.2s, border-color 0.2s',
+  },
+  roomCardHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: '16px',
+  },
+  roomCardIcon: {
+    fontSize: '48px',
+  },
+  privateBadge: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '32px',
+    height: '32px',
+    backgroundColor: '#ef4444',
+    borderRadius: '8px',
+    color: 'white',
+  },
+  roomCardTitle: {
+    fontSize: '20px',
+    fontWeight: 'bold',
+    color: 'white',
+    margin: '0 0 8px 0',
+  },
+  roomCardDescription: {
+    fontSize: '14px',
+    color: '#9ca3af',
+    margin: '0 0 16px 0',
+    lineHeight: '1.5',
+  },
+  roomCardFooter: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: '16px',
+    borderTop: '1px solid #334155',
+  },
+  roomCardInfo: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    color: '#9ca3af',
+    fontSize: '14px',
+  },
+  roomCardActivity: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    color: '#9ca3af',
+    fontSize: '14px',
+  },
+  activityDot: {
+    width: '8px',
+    height: '8px',
+    backgroundColor: '#10b981',
+    borderRadius: '50%',
+    animation: 'pulse 2s infinite',
+  },
+  createRoomButton: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '12px',
+    maxWidth: '1200px',
+    margin: '32px auto 0',
+    padding: '16px 32px',
+    fontSize: '16px',
+    fontWeight: '600',
+    color: 'white',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    border: 'none',
+    borderRadius: '12px',
+    cursor: 'pointer',
+    transition: 'transform 0.2s',
+  },
+
+  // チャット画面
   container: {
     display: 'flex',
     height: '100vh',
@@ -349,7 +769,7 @@ const styles: { [key: string]: CSSProperties } = {
     flexDirection: 'column',
     gap: '4px',
   },
-  roomItem: {
+  channelItem: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -360,7 +780,7 @@ const styles: { [key: string]: CSSProperties } = {
     backgroundColor: 'transparent',
     color: '#d1d5db',
   },
-  roomItemActive: {
+  channelItemActive: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -370,12 +790,12 @@ const styles: { [key: string]: CSSProperties } = {
     backgroundColor: '#9333ea',
     color: 'white',
   },
-  roomInfo: {
+  channelInfo: {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
   },
-  roomName: {
+  channelName: {
     fontSize: '14px',
     fontWeight: '500',
   },
@@ -442,7 +862,7 @@ const styles: { [key: string]: CSSProperties } = {
     display: 'flex',
     alignItems: 'center',
   },
-  channelName: {
+  channelNameHeader: {
     fontSize: '18px',
     fontWeight: '600',
     color: 'white',
@@ -696,4 +1116,4 @@ const styles: { [key: string]: CSSProperties } = {
     color: '#6b7280',
     margin: 0,
   },
-};
+}
