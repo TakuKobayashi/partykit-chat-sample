@@ -1,0 +1,39 @@
+on:
+  push:
+    branches:
+      - master
+
+name: Deploy Cloudflare Workers
+jobs:
+  builddeploy:
+    name: Deploy Cloudflare Workers
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [22.x]
+        backend-root-project-path: [./]
+        frontend-root-project-path: [./web-frontend]
+    steps:
+    - uses: actions/checkout@v4
+    - name: setup ubuntu
+      run: |
+        sudo apt-get --quiet update --yes
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+    - name: backend yarn install
+      working-directory: ${{ matrix.backend-root-project-path }}
+      run: yarn install
+    - name: frontend yarn install
+      working-directory: ${{ matrix.frontend-root-project-path }}
+      run: yarn install
+    - name: frontend build
+      working-directory: ${{ matrix.frontend-root-project-path }}
+      run: yarn run build
+    - name: deploy to cloudflare workers
+      uses: cloudflare/wrangler-action@v3
+      with:
+        workingDirectory: ${{ matrix.backend-root-project-path }}
+        apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
