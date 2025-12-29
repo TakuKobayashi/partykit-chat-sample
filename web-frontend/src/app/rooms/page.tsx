@@ -69,7 +69,7 @@ export default function RoomsPage() {
   useEffect(() => {
     const userData = (window as any).__chatUserData;
     if (!userData) {
-      window.location.href = '/';
+      router.push('/');
     } else {
       setCurrentUser(userData);
     }
