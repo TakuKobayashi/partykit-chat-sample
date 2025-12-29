@@ -2,9 +2,11 @@
 
 import { useState, CSSProperties } from 'react';
 import { ArrowRight } from 'lucide-react';
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [username, setUsername] = useState<string>('');
+  const router = useRouter();
 
   const handleLogin = (e: React.FormEvent): void => {
     e.preventDefault();
@@ -19,7 +21,7 @@ export default function LoginPage() {
       // メモリに保存
       (window as any).__chatUserData = userData;
       // ルーム一覧へ遷移
-      window.location.href = '/rooms';
+      router.push('/rooms');
     }
   };
 
