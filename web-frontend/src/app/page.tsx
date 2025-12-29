@@ -858,10 +858,6 @@ const styles: { [key: string]: CSSProperties } = {
     alignItems: 'center',
     transition: 'background-color 0.2s',
   },
-  channelInfo: {
-    display: 'flex',
-    alignItems: 'center',
-  },
   channelNameHeader: {
     fontSize: '18px',
     fontWeight: '600',
