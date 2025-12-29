@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useRef, useEffect, CSSProperties } from 'react';
+import { useState, useRef, useEffect, CSSProperties, Suspense } from 'react';
 import { Send, Menu, Users, Hash, Settings, LogOut, Smile, Paperclip, MoreVertical, ArrowLeft } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import type { Message, User, Channel, CurrentUser, Room } from '../types';
 
-export default function ChatPage() {
+function ChatContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const roomId = searchParams.get('roomId');
@@ -273,6 +273,16 @@ export default function ChatPage() {
           opacity: 1;
         }
       `}</style>
+    </div>
+  );
+}
+
+export default function ChatPage() {
+  return (
+    <div style={styles.container}>
+      <Suspense fallback={<div>読み込み中...</div>}>
+        <ChatContent />
+      </Suspense>
     </div>
   );
 }
