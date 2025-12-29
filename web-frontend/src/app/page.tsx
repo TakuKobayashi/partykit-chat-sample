@@ -2,7 +2,7 @@
 
 import { useState, CSSProperties } from 'react';
 import { ArrowRight } from 'lucide-react';
-import { useRouter } from "next/navigation";
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const [username, setUsername] = useState<string>('');
@@ -16,7 +16,7 @@ export default function LoginPage() {
       const userData = {
         name: username,
         avatar: randomAvatar,
-        color: '#a855f7'
+        color: '#a855f7',
       };
       // メモリに保存
       (window as any).__chatUserData = userData;
@@ -51,9 +51,7 @@ export default function LoginPage() {
           </button>
         </form>
         <div style={styles.footer}>
-          <p style={styles.footerText}>
-            ユーザー名を入力して、チャットルームに参加しましょう
-          </p>
+          <p style={styles.footerText}>ユーザー名を入力して、チャットルームに参加しましょう</p>
         </div>
       </div>
     </div>

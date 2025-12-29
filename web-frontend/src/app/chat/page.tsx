@@ -2,13 +2,13 @@
 
 import { useState, useRef, useEffect, CSSProperties } from 'react';
 import { Send, Menu, Users, Hash, Settings, LogOut, Smile, Paperclip, MoreVertical, ArrowLeft } from 'lucide-react';
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from 'next/navigation';
 import type { Message, User, Channel, CurrentUser, Room } from '../types';
 
 export default function ChatPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const roomId = searchParams.get("roomId")
+  const roomId = searchParams.get('roomId');
 
   const [messages, setMessages] = useState<Message[]>([
     { id: 1, text: 'みなさん、こんにちは！', sender: '田中太郎', avatar: '🧑', time: '10:30', color: '#3b82f6' },
@@ -39,9 +39,9 @@ export default function ChatPage() {
   useEffect(() => {
     const userData = (window as any).__chatUserData;
     const roomData = (window as any).__selectedRoom;
-    
+
     if (!userData) {
-      router.push("/");
+      router.push('/');
     } else {
       setCurrentUser(userData);
     }
@@ -67,7 +67,7 @@ export default function ChatPage() {
         sender: currentUser.name,
         avatar: currentUser.avatar,
         time: new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }),
-        color: currentUser.color
+        color: currentUser.color,
       };
       setMessages([...messages, newMessage]);
       setInput('');
@@ -85,9 +85,9 @@ export default function ChatPage() {
           sender: randomResponse.sender,
           avatar: randomResponse.avatar,
           time: new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }),
-          color: randomResponse.color
+          color: randomResponse.color,
         };
-        setMessages(prev => [...prev, aiResponse]);
+        setMessages((prev) => [...prev, aiResponse]);
       }, 2000);
     }
   };
@@ -102,7 +102,7 @@ export default function ChatPage() {
   const handleLogout = (): void => {
     delete (window as any).__chatUserData;
     delete (window as any).__selectedRoom;
-    router.push("/");
+    router.push('/');
   };
 
   if (!currentUser) {
@@ -112,32 +112,25 @@ export default function ChatPage() {
   return (
     <div style={styles.container}>
       {/* 左サイドバー */}
-      <div style={{...styles.leftSidebar, width: isSidebarOpen ? '256px' : '0'}}>
+      <div style={{ ...styles.leftSidebar, width: isSidebarOpen ? '256px' : '0' }}>
         <div style={styles.sidebarHeader}>
           <h2 style={styles.workspaceTitle}>
-            <Hash color="#a855f7" size={24} style={{marginRight: '8px'}} />
+            <Hash color="#a855f7" size={24} style={{ marginRight: '8px' }} />
             {selectedRoom?.name || 'ワークスペース'}
           </h2>
         </div>
-        
+
         <div style={styles.roomsContainer}>
           <div style={styles.roomsContent}>
             <h3 style={styles.roomsLabel}>チャンネル</h3>
             <div style={styles.roomsList}>
               {channels.map((channel, idx) => (
-                <div 
-                  key={idx} 
-                  style={channel.active ? styles.channelItemActive : styles.channelItem}
-                >
+                <div key={idx} style={channel.active ? styles.channelItemActive : styles.channelItem}>
                   <div style={styles.channelInfo}>
-                    <span style={{fontSize: '16px'}}>{channel.icon}</span>
+                    <span style={{ fontSize: '16px' }}>{channel.icon}</span>
                     <span style={styles.channelName}>{channel.name}</span>
                   </div>
-                  {channel.unread > 0 && (
-                    <span style={styles.unreadBadge}>
-                      {channel.unread}
-                    </span>
-                  )}
+                  {channel.unread > 0 && <span style={styles.unreadBadge}>{channel.unread}</span>}
                 </div>
               ))}
             </div>
@@ -164,14 +157,11 @@ export default function ChatPage() {
       <div style={styles.mainContent}>
         <div style={styles.header}>
           <div style={styles.headerLeft}>
-            <button 
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              style={styles.menuButton}
-            >
+            <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} style={styles.menuButton}>
               <Menu size={24} />
             </button>
             <div style={styles.channelInfoHeader}>
-              <span style={{fontSize: '24px', marginRight: '8px'}}>💬</span>
+              <span style={{ fontSize: '24px', marginRight: '8px' }}>💬</span>
               <div>
                 <h1 style={styles.channelNameHeader}>一般</h1>
                 <p style={styles.onlineCount}>{onlineUsers.length}人がオンライン</p>
@@ -186,42 +176,34 @@ export default function ChatPage() {
         <div style={styles.messagesArea}>
           {messages.map((message) => (
             <div key={message.id} style={styles.messageRow} className="message-group">
-              <div style={styles.messageAvatar}>
-                {message.avatar}
-              </div>
+              <div style={styles.messageAvatar}>{message.avatar}</div>
               <div style={styles.messageContent}>
                 <div style={styles.messageHeader}>
-                  <span style={{...styles.messageSender, color: message.color}}>
-                    {message.sender}
-                  </span>
+                  <span style={{ ...styles.messageSender, color: message.color }}>{message.sender}</span>
                   <span style={styles.messageTime}>{message.time}</span>
                 </div>
-                <div style={styles.messageText}>
-                  {message.text}
-                </div>
+                <div style={styles.messageText}>{message.text}</div>
               </div>
               <button style={styles.messageMoreButton} className="message-more">
                 <MoreVertical size={16} />
               </button>
             </div>
           ))}
-          
+
           {isTyping.length > 0 && (
             <div style={styles.typingIndicator}>
-              <div style={styles.typingAvatar}>
-                👩
-              </div>
+              <div style={styles.typingAvatar}>👩</div>
               <div style={styles.typingInfo}>
                 <span style={styles.typingText}>{isTyping[0]}が入力中</span>
                 <div style={styles.typingDots}>
-                  <div style={{...styles.typingDot, animationDelay: '0ms'}}></div>
-                  <div style={{...styles.typingDot, animationDelay: '150ms'}}></div>
-                  <div style={{...styles.typingDot, animationDelay: '300ms'}}></div>
+                  <div style={{ ...styles.typingDot, animationDelay: '0ms' }}></div>
+                  <div style={{ ...styles.typingDot, animationDelay: '150ms' }}></div>
+                  <div style={{ ...styles.typingDot, animationDelay: '300ms' }}></div>
                 </div>
               </div>
             </div>
           )}
-          
+
           <div ref={messagesEndRef} />
         </div>
 
@@ -242,11 +224,7 @@ export default function ChatPage() {
               <button style={styles.inputButton}>
                 <Smile size={20} />
               </button>
-              <button
-                onClick={handleSend}
-                disabled={!input.trim()}
-                style={input.trim() ? styles.sendButton : styles.sendButtonDisabled}
-              >
+              <button onClick={handleSend} disabled={!input.trim()} style={input.trim() ? styles.sendButton : styles.sendButtonDisabled}>
                 <Send size={20} />
               </button>
             </div>
@@ -258,24 +236,20 @@ export default function ChatPage() {
       <div style={styles.rightSidebar}>
         <div style={styles.usersHeader}>
           <h3 style={styles.usersTitle}>
-            <Users size={18} style={{marginRight: '8px'}} />
-            オンライン — {onlineUsers.filter(u => u.status === 'online').length}
+            <Users size={18} style={{ marginRight: '8px' }} />
+            オンライン — {onlineUsers.filter((u) => u.status === 'online').length}
           </h3>
         </div>
         <div style={styles.usersList}>
           {onlineUsers.map((user, idx) => (
             <div key={idx} style={styles.userItem}>
               <div style={styles.userAvatarWrapper}>
-                <div style={styles.userAvatar}>
-                  {user.avatar}
-                </div>
+                <div style={styles.userAvatar}>{user.avatar}</div>
                 <div style={user.status === 'online' ? styles.statusOnline : styles.statusAway}></div>
               </div>
               <div style={styles.userInfo}>
                 <p style={styles.userName}>{user.name}</p>
-                <p style={styles.userStatus}>
-                  {user.status === 'online' ? 'オンライン' : '離席中'}
-                </p>
+                <p style={styles.userStatus}>{user.status === 'online' ? 'オンライン' : '離席中'}</p>
               </div>
             </div>
           ))}
@@ -693,4 +667,4 @@ const styles: { [key: string]: CSSProperties } = {
     color: '#6b7280',
     margin: 0,
   },
-}
+};

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, CSSProperties } from 'react';
 import { Users, Lock, Plus } from 'lucide-react';
-import { useRouter } from "next/navigation";
+import { useRouter } from 'next/navigation';
 import type { Room, CurrentUser } from '../types';
 
 export default function RoomsPage() {
@@ -17,7 +17,7 @@ export default function RoomsPage() {
       description: '誰でも参加できるオープンな雑談ルーム',
       memberCount: 128,
       isPrivate: false,
-      lastActivity: '2分前'
+      lastActivity: '2分前',
     },
     {
       id: '2',
@@ -26,7 +26,7 @@ export default function RoomsPage() {
       description: 'プロジェクトAに関する議論・進捗報告',
       memberCount: 24,
       isPrivate: false,
-      lastActivity: '5分前'
+      lastActivity: '5分前',
     },
     {
       id: '3',
@@ -35,7 +35,7 @@ export default function RoomsPage() {
       description: 'デザイン関連の相談・レビュー',
       memberCount: 15,
       isPrivate: true,
-      lastActivity: '15分前'
+      lastActivity: '15分前',
     },
     {
       id: '4',
@@ -44,7 +44,7 @@ export default function RoomsPage() {
       description: '技術的な議論・コードレビュー',
       memberCount: 42,
       isPrivate: false,
-      lastActivity: '1分前'
+      lastActivity: '1分前',
     },
     {
       id: '5',
@@ -53,7 +53,7 @@ export default function RoomsPage() {
       description: '経営陣のみ参加可能',
       memberCount: 8,
       isPrivate: true,
-      lastActivity: '30分前'
+      lastActivity: '30分前',
     },
     {
       id: '6',
@@ -62,7 +62,7 @@ export default function RoomsPage() {
       description: 'ゲームの話題で盛り上がろう',
       memberCount: 67,
       isPrivate: false,
-      lastActivity: '3分前'
+      lastActivity: '3分前',
     },
   ];
 
@@ -96,15 +96,11 @@ export default function RoomsPage() {
           <span style={styles.userBadgeName}>{currentUser.name}</span>
         </div>
       </div>
-      
+
       <div style={styles.content}>
         <div style={styles.grid}>
           {availableRooms.map((room) => (
-            <div
-              key={room.id}
-              style={styles.card}
-              onClick={() => handleJoinRoom(room)}
-            >
+            <div key={room.id} style={styles.card} onClick={() => handleJoinRoom(room)}>
               <div style={styles.cardHeader}>
                 <div style={styles.cardIcon}>{room.icon}</div>
                 {room.isPrivate && (
