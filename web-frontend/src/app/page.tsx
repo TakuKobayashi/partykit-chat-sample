@@ -3,6 +3,7 @@
 import { useState, CSSProperties } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import axios from 'axios';
 
 export default function LoginPage() {
   const [username, setUsername] = useState<string>('');
@@ -18,8 +19,13 @@ export default function LoginPage() {
         avatar: randomAvatar,
         color: '#a855f7',
       };
+      axios.post(`${process.env.NEXT_PUBLIC_API_ROOT_URL}/account/signin`, userData).then((response) => {
+        console.log(response.data);
+        window.localStorage.setItem('login_user_data', JSON.stringify(response.data));
+      });
+      window.localStorage.setItem('login_user_data', JSON.stringify(userData));
       // メモリに保存
-      (window as any).__chatUserData = userData;
+      //      (window as any).__chatUserData = userData;
       // ルーム一覧へ遷移
       router.push('/rooms');
     }

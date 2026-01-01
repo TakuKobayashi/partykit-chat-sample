@@ -8,6 +8,7 @@
     "format": "prettier --config .prettierrc --write \"src/**/*.{ts,js}\""
   },
   "dependencies": {
+    "axios": "^1.13.2",
     "hono": "^4.11.3",
     "hono-party": "^1.0.0",
     "partyserver": "^0.1.0"

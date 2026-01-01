@@ -1,9 +1,12 @@
 import { Hono } from 'hono';
+import { cors } from 'hono/cors';
 import { partyserverMiddleware } from 'hono-party';
 import { Connection, Server, WSMessage } from 'partyserver';
+import crypto from 'crypto';
 
 const honoApp = new Hono();
 const apiApp = honoApp.basePath('/api');
+apiApp.use('*', cors());
 const wsApp = honoApp.basePath('/ws');
 
 // Multiple party servers
@@ -23,6 +26,12 @@ wsApp.use('*', partyserverMiddleware({ onError: (error) => console.error(error) 
 
 apiApp.get('/', (c) => {
   return c.text('Hello Hono!');
+});
+
+apiApp.post('/account/signin', async (c) => {
+  const userData = await c.req.json();
+  userData.uuid = crypto.randomUUID();
+  return c.json(userData);
 });
 
 export default honoApp;
