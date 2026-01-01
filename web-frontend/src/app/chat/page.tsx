@@ -37,13 +37,13 @@ function ChatContent() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const userData = (window as any).__chatUserData;
+    const userData = window.localStorage.getItem('login_user_data');
     const roomData = (window as any).__selectedRoom;
 
     if (!userData) {
       router.push('/');
     } else {
-      setCurrentUser(userData);
+      setCurrentUser(JSON.parse(userData));
     }
 
     if (roomData) {
@@ -100,7 +100,7 @@ function ChatContent() {
   };
 
   const handleLogout = (): void => {
-    delete (window as any).__chatUserData;
+    window.localStorage.removeItem('login_user_data');
     delete (window as any).__selectedRoom;
     router.push('/');
   };

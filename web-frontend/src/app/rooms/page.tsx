@@ -67,11 +67,11 @@ export default function RoomsPage() {
   ];
 
   useEffect(() => {
-    const userData = (window as any).__chatUserData;
+    const userData = window.localStorage.getItem('login_user_data');
     if (!userData) {
       router.push('/');
     } else {
-      setCurrentUser(userData);
+      setCurrentUser(JSON.parse(userData));
     }
   }, []);
 

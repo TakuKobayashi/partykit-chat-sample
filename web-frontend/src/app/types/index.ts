@@ -31,6 +31,7 @@ export interface Channel {
 }
 
 export interface CurrentUser {
+  id: string;
   name: string;
   avatar: string;
   color: string;

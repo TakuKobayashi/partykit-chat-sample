@@ -20,12 +20,9 @@ export default function LoginPage() {
         color: '#a855f7',
       };
       axios.post(`${process.env.NEXT_PUBLIC_API_ROOT_URL}/account/signin`, userData).then((response) => {
-        console.log(response.data);
         window.localStorage.setItem('login_user_data', JSON.stringify(response.data));
       });
       window.localStorage.setItem('login_user_data', JSON.stringify(userData));
-      // メモリに保存
-      //      (window as any).__chatUserData = userData;
       // ルーム一覧へ遷移
       router.push('/rooms');
     }
