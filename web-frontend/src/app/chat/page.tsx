@@ -257,11 +257,9 @@ function ChatContent() {
 
 export default function ChatPage() {
   return (
-    <div style={styles.container}>
-      <Suspense fallback={<div>読み込み中...</div>}>
-        <ChatContent />
-      </Suspense>
-    </div>
+    <Suspense fallback={<div>読み込み中...</div>}>
+      <ChatContent />
+    </Suspense>
   );
 }
 
