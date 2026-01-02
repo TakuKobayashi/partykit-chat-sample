@@ -3,68 +3,13 @@
 import { useState, useEffect, CSSProperties } from 'react';
 import { Users, Lock, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import axios from 'axios';
 import type { Room, CurrentUser } from '../types';
 
 export default function RoomsPage() {
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
+  const [availableRooms, setAvailableRooms] = useState<Room[]>([]);
   const router = useRouter();
-
-  const availableRooms: Room[] = [
-    {
-      id: '1',
-      name: '一般チャット',
-      icon: '💬',
-      description: '誰でも参加できるオープンな雑談ルーム',
-      memberCount: 128,
-      isPrivate: false,
-      lastActivity: '2分前',
-    },
-    {
-      id: '2',
-      name: 'プロジェクトA',
-      icon: '📊',
-      description: 'プロジェクトAに関する議論・進捗報告',
-      memberCount: 24,
-      isPrivate: false,
-      lastActivity: '5分前',
-    },
-    {
-      id: '3',
-      name: 'デザインチーム',
-      icon: '🎨',
-      description: 'デザイン関連の相談・レビュー',
-      memberCount: 15,
-      isPrivate: true,
-      lastActivity: '15分前',
-    },
-    {
-      id: '4',
-      name: 'エンジニアリング',
-      icon: '⚙️',
-      description: '技術的な議論・コードレビュー',
-      memberCount: 42,
-      isPrivate: false,
-      lastActivity: '1分前',
-    },
-    {
-      id: '5',
-      name: '経営会議',
-      icon: '🏢',
-      description: '経営陣のみ参加可能',
-      memberCount: 8,
-      isPrivate: true,
-      lastActivity: '30分前',
-    },
-    {
-      id: '6',
-      name: 'ゲーム好き集まれ',
-      icon: '🎮',
-      description: 'ゲームの話題で盛り上がろう',
-      memberCount: 67,
-      isPrivate: false,
-      lastActivity: '3分前',
-    },
-  ];
 
   useEffect(() => {
     const userData = window.localStorage.getItem('login_user_data');
@@ -73,7 +18,10 @@ export default function RoomsPage() {
     } else {
       setCurrentUser(JSON.parse(userData));
     }
-  }, []);
+    axios.get(`${process.env.NEXT_PUBLIC_API_ROOT_URL}/rooms`).then((response) => {
+      setAvailableRooms(response.data);
+    });
+  }, [availableRooms]);
 
   const handleJoinRoom = (room: Room): void => {
     (window as any).__selectedRoom = room;
