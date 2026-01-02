@@ -1,14 +1,14 @@
 import { Hono } from 'hono';
-import { cors } from 'hono/cors'
+import { cors } from 'hono/cors';
 import { partyserverMiddleware } from 'hono-party';
 import { Connection, Server, WSMessage } from 'partyserver';
-import crypto from "crypto";
+import crypto from 'crypto';
 
 const honoApp = new Hono();
-honoApp.use('*', partyserverMiddleware({ onError: (error) => console.error(error), options: { prefix: "ws" }}));
+honoApp.use('*', partyserverMiddleware({ onError: (error) => console.error(error), options: { prefix: 'ws' } }));
 
 const apiApp = honoApp.basePath('/api');
-apiApp.use('*', cors())
+apiApp.use('*', cors());
 
 // Multiple party servers
 export class Chat extends Server {
