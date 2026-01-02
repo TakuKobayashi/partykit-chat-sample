@@ -87,6 +87,30 @@ apiApp.get('/rooms', (c) => {
   ]);
 });
 
+apiApp.get('/rooms/:roomId/channels', (c) => {
+  return c.json({
+    channels: [
+      { name: '一般', icon: '💬', unread: 0, active: true },
+      { name: 'プロジェクトA', icon: '📊', unread: 3, active: false },
+      { name: 'デザイン', icon: '🎨', unread: 0, active: false },
+      { name: 'エンジニアリング', icon: '⚙️', unread: 7, active: false },
+      { name: '雑談', icon: '☕', unread: 0, active: false },
+    ],
+    online_users: [
+      { name: '田中太郎', avatar: '🧑', status: 'online' },
+      { name: '山田花子', avatar: '👩', status: 'online' },
+      { name: '佐藤次郎', avatar: '👨', status: 'online' },
+      { name: '鈴木一郎', avatar: '🧔', status: 'away' },
+      { name: '高橋美咲', avatar: '👧', status: 'online' },
+    ],
+    default_messages: [
+      { id: 1, text: 'みなさん、こんにちは！', sender: '田中太郎', avatar: '🧑', time: '10:30', color: '#3b82f6' },
+      { id: 2, text: 'おはようございます！', sender: '山田花子', avatar: '👩', time: '10:31', color: '#ec4899' },
+      { id: 3, text: 'プロジェクトの進捗について話し合いましょう', sender: '佐藤次郎', avatar: '👨', time: '10:32', color: '#10b981' },
+    ],
+  });
+});
+
 apiApp.post('/account/signin', async (c) => {
   const userData = await c.req.json();
   userData.uuid = crypto.randomUUID();

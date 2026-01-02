@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, CSSProperties, Suspense } from 'react';
 import { Send, Menu, Users, Hash, Settings, LogOut, Smile, Paperclip, MoreVertical, ArrowLeft } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { WebSocket } from 'partysocket';
+import axios from 'axios';
 import type { Message, User, Channel, CurrentUser, Room } from '../types';
 
 function ChatContent() {
@@ -11,38 +12,13 @@ function ChatContent() {
   const searchParams = useSearchParams();
   const roomId = searchParams.get('roomId');
 
-  // wss://serverHost/prefix/party名/room名
-  const ws = new WebSocket(`${process.env.NEXT_PUBLIC_WEBSCOKET_ROOT_URL}/chat/${roomId}`);
-  ws.onopen = (event) => {
-    ws.send('hello!');
-  };
-  ws.onmessage = (event) => {
-    console.log(`onmessage:${event.data}`);
-  };
-
-  const [messages, setMessages] = useState<Message[]>([
-    { id: 1, text: 'みなさん、こんにちは！', sender: '田中太郎', avatar: '🧑', time: '10:30', color: '#3b82f6' },
-    { id: 2, text: 'おはようございます！', sender: '山田花子', avatar: '👩', time: '10:31', color: '#ec4899' },
-    { id: 3, text: 'プロジェクトの進捗について話し合いましょう', sender: '佐藤次郎', avatar: '👨', time: '10:32', color: '#10b981' },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState<string>('');
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
-  const [onlineUsers] = useState<User[]>([
-    { name: '田中太郎', avatar: '🧑', status: 'online' },
-    { name: '山田花子', avatar: '👩', status: 'online' },
-    { name: '佐藤次郎', avatar: '👨', status: 'online' },
-    { name: '鈴木一郎', avatar: '🧔', status: 'away' },
-    { name: '高橋美咲', avatar: '👧', status: 'online' },
-  ]);
-  const [channels] = useState<Channel[]>([
-    { name: '一般', icon: '💬', unread: 0, active: true },
-    { name: 'プロジェクトA', icon: '📊', unread: 3, active: false },
-    { name: 'デザイン', icon: '🎨', unread: 0, active: false },
-    { name: 'エンジニアリング', icon: '⚙️', unread: 7, active: false },
-    { name: '雑談', icon: '☕', unread: 0, active: false },
-  ]);
+  const [onlineUsers, setOnlineUsers] = useState<User[]>([]);
+  const [channels, setChannels] = useState<Channel[]>([]);
   const [isTyping] = useState<string[]>(['山田花子']);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -52,13 +28,27 @@ function ChatContent() {
 
     if (!userData) {
       router.push('/');
-    } else {
-      setCurrentUser(JSON.parse(userData));
+      return;
     }
-
-    if (roomData) {
-      setSelectedRoom(roomData);
+    if (!roomData) {
+      router.push('/rooms');
+      return;
     }
+    // wss://serverHost/prefix/party名/room名
+    const ws = new WebSocket(`${process.env.NEXT_PUBLIC_WEBSCOKET_ROOT_URL}/chat/${roomId}`);
+    ws.onopen = (event) => {
+      ws.send('hello!');
+    };
+    ws.onmessage = (event) => {
+      console.log(`onmessage:${event.data}`);
+    };
+    setCurrentUser(JSON.parse(userData));
+    setSelectedRoom(roomData);
+    axios.get(`${process.env.NEXT_PUBLIC_API_ROOT_URL}/rooms/${roomId}/channels`).then((response) => {
+      setChannels(response.data.channels);
+      setOnlineUsers(response.data.online_users);
+      setMessages(response.data.default_messages);
+    });
   }, []);
 
   const scrollToBottom = (): void => {
@@ -81,24 +71,6 @@ function ChatContent() {
       };
       setMessages([...messages, newMessage]);
       setInput('');
-
-      setTimeout(() => {
-        const responses = [
-          { text: 'いいですね！', sender: '田中太郎', avatar: '🧑', color: '#3b82f6' },
-          { text: '賛成です', sender: '山田花子', avatar: '👩', color: '#ec4899' },
-          { text: 'それで進めましょう', sender: '佐藤次郎', avatar: '👨', color: '#10b981' },
-        ];
-        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-        const aiResponse: Message = {
-          id: messages.length + 2,
-          text: randomResponse.text,
-          sender: randomResponse.sender,
-          avatar: randomResponse.avatar,
-          time: new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }),
-          color: randomResponse.color,
-        };
-        setMessages((prev) => [...prev, aiResponse]);
-      }, 2000);
     }
   };
 
@@ -151,10 +123,6 @@ function ChatContent() {
           <button style={styles.footerButton} onClick={() => router.push('/rooms')}>
             <ArrowLeft size={18} />
             <span style={styles.footerButtonText}>ルーム一覧に戻る</span>
-          </button>
-          <button style={styles.footerButton}>
-            <Settings size={18} />
-            <span style={styles.footerButtonText}>設定</span>
           </button>
           <button style={styles.footerButton} onClick={handleLogout}>
             <LogOut size={18} />
