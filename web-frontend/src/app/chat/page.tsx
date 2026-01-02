@@ -3,12 +3,16 @@
 import { useState, useRef, useEffect, CSSProperties, Suspense } from 'react';
 import { Send, Menu, Users, Hash, Settings, LogOut, Smile, Paperclip, MoreVertical, ArrowLeft } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { selectedRoom, selectChannel } from '../atoms/rooms';
+import { useAtom } from 'jotai';
 import { WebSocket } from 'partysocket';
 import axios from 'axios';
-import type { Message, User, Channel, CurrentUser, Room } from '../types';
+import type { Message, User, Channel, CurrentUser } from '../types';
 
 function ChatContent() {
   const router = useRouter();
+  const [currentRoom, setCurrentRoom] = useAtom(selectedRoom);
+  const [currentChannel, setCurrentChannel] = useAtom(selectChannel);
   const searchParams = useSearchParams();
   const roomId = searchParams.get('roomId');
 
@@ -16,7 +20,6 @@ function ChatContent() {
   const [input, setInput] = useState<string>('');
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
-  const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [onlineUsers, setOnlineUsers] = useState<User[]>([]);
   const [channels, setChannels] = useState<Channel[]>([]);
   const [isTyping] = useState<string[]>(['山田花子']);
@@ -24,14 +27,8 @@ function ChatContent() {
 
   useEffect(() => {
     const userData = window.localStorage.getItem('login_user_data');
-    const roomData = (window as any).__selectedRoom;
-
     if (!userData) {
       router.push('/');
-      return;
-    }
-    if (!roomData) {
-      router.push('/rooms');
       return;
     }
     // wss://serverHost/prefix/party名/room名
@@ -43,12 +40,26 @@ function ChatContent() {
       console.log(`onmessage:${event.data}`);
     };
     setCurrentUser(JSON.parse(userData));
-    setSelectedRoom(roomData);
-    axios.get(`${process.env.NEXT_PUBLIC_API_ROOT_URL}/rooms/${roomId}/channels`).then((response) => {
-      setChannels(response.data.channels);
-      setOnlineUsers(response.data.online_users);
-      setMessages(response.data.default_messages);
-    });
+    axios
+      .get(`${process.env.NEXT_PUBLIC_API_ROOT_URL}/rooms/${roomId}/channels`)
+      .then((response) => {
+        if (!response.data.selectRoom) {
+          router.push('/rooms');
+          return;
+        }
+        setCurrentRoom(response.data.selectRoom);
+        setChannels(response.data.channels);
+        setOnlineUsers(response.data.online_users);
+        if (currentChannel) {
+          loadChannelMessages(currentChannel);
+        } else {
+          loadChannelMessages(response.data.channels[0]);
+        }
+      })
+      .catch((err) => {
+        router.push('/rooms');
+        return;
+      });
   }, []);
 
   const scrollToBottom = (): void => {
@@ -83,7 +94,7 @@ function ChatContent() {
 
   const handleLogout = (): void => {
     window.localStorage.removeItem('login_user_data');
-    delete (window as any).__selectedRoom;
+    setCurrentRoom(null);
     router.push('/');
   };
 
@@ -99,11 +110,16 @@ function ChatContent() {
         channel.active = false;
       }
     }
-    await axios.get(`${process.env.NEXT_PUBLIC_API_ROOT_URL}/rooms/${roomId}/${willChangeChannel.id}/messages`).then((response) => {
+    setCurrentChannel(willChangeChannel);
+    setChannels(newChannels);
+    await loadChannelMessages(willChangeChannel);
+  };
+
+  const loadChannelMessages = async (channel: Channel) => {
+    await axios.get(`${process.env.NEXT_PUBLIC_API_ROOT_URL}/rooms/${roomId}/${channel.id}/messages`).then((response) => {
       setMessages(response.data);
     });
-    setChannels(newChannels);
-  };
+  }
 
   if (!currentUser) {
     return null;
@@ -116,7 +132,7 @@ function ChatContent() {
         <div style={styles.sidebarHeader}>
           <h2 style={styles.workspaceTitle}>
             <Hash color="#a855f7" size={24} style={{ marginRight: '8px' }} />
-            {selectedRoom?.name || 'ワークスペース'}
+            {currentRoom?.name || 'ワークスペース'}
           </h2>
         </div>
 

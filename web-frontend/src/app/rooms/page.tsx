@@ -3,12 +3,15 @@
 import { useState, useEffect, CSSProperties } from 'react';
 import { Users, Lock, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useAtom } from 'jotai';
 import axios from 'axios';
+import { rooms, selectedRoom } from '../atoms/rooms';
 import type { Room, CurrentUser } from '../types';
 
 export default function RoomsPage() {
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
-  const [availableRooms, setAvailableRooms] = useState<Room[]>([]);
+  const [availableRooms, setAvailableRooms] = useAtom(rooms);
+  const [selectRoom, setSelectRoom] = useAtom(selectedRoom);
   const router = useRouter();
 
   useEffect(() => {
@@ -18,13 +21,15 @@ export default function RoomsPage() {
     } else {
       setCurrentUser(JSON.parse(userData));
     }
-    axios.get(`${process.env.NEXT_PUBLIC_API_ROOT_URL}/rooms`).then((response) => {
-      setAvailableRooms(response.data);
-    });
+    if (availableRooms.length <= 0) {
+      axios.get(`${process.env.NEXT_PUBLIC_API_ROOT_URL}/rooms`).then((response) => {
+        setAvailableRooms(response.data);
+      });
+    }
   }, [availableRooms]);
 
   const handleJoinRoom = (room: Room): void => {
-    (window as any).__selectedRoom = room;
+    setSelectRoom(room);
     router.push(`/chat?roomId=${encodeURIComponent(room.id)}`);
   };
 

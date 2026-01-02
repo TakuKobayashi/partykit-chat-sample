@@ -85,6 +85,15 @@ apiApp.get('/rooms', (c) => {
 
 apiApp.get('/rooms/:roomId/channels', (c) => {
   return c.json({
+    selectRoom: {
+      id: '1',
+      name: '一般チャット',
+      icon: '💬',
+      description: '誰でも参加できるオープンな雑談ルーム',
+      memberCount: 128,
+      isPrivate: false,
+      lastActivity: '2分前',
+    },
     channels: [
       { id: 1, name: '一般', icon: '💬', unread: 0, active: true },
       { id: 2, name: '雑談', icon: '☕', unread: 0, active: false },
