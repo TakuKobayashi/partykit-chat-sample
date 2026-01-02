@@ -1,5 +1,5 @@
 export interface Message {
-  id: number;
+  id: string;
   text: string;
   sender: string;
   avatar: string;
@@ -24,6 +24,7 @@ export interface Room {
 }
 
 export interface Channel {
+  id: string;
   name: string;
   icon: string;
   unread: number;

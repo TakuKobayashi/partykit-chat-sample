@@ -87,6 +87,24 @@ function ChatContent() {
     router.push('/');
   };
 
+  const changeChannel = async (targetChannel: Channel): Promise<void> => {
+    const newChannels = [...channels];
+    const willChangeChannel = newChannels.find((channel) => channel === targetChannel);
+    if (!willChangeChannel || willChangeChannel.active) {
+      return;
+    }
+    willChangeChannel.active = true;
+    for (const channel of newChannels) {
+      if (channel !== willChangeChannel) {
+        channel.active = false;
+      }
+    }
+    await axios.get(`${process.env.NEXT_PUBLIC_API_ROOT_URL}/rooms/${roomId}/${willChangeChannel.id}/messages`).then((response) => {
+      setMessages(response.data);
+    });
+    setChannels(newChannels);
+  };
+
   if (!currentUser) {
     return null;
   }
@@ -107,7 +125,11 @@ function ChatContent() {
             <h3 style={styles.roomsLabel}>チャンネル</h3>
             <div style={styles.roomsList}>
               {channels.map((channel, idx) => (
-                <div key={idx} style={channel.active ? styles.channelItemActive : styles.channelItem}>
+                <div
+                  key={idx}
+                  style={channel.active ? styles.channelItemActive : styles.channelItem}
+                  onClick={(e) => changeChannel(channel)}
+                >
                   <div style={styles.channelInfo}>
                     <span style={{ fontSize: '16px' }}>{channel.icon}</span>
                     <span style={styles.channelName}>{channel.name}</span>
