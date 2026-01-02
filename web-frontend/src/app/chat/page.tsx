@@ -14,7 +14,8 @@ function ChatContent() {
   const socket = usePartySocket({
     host: "localhost:8787",
     party: "chat",
-    room: "general"
+    room: "general",
+    prefix: "ws",
   });
   socket.onopen = (event) => {
     console.log("open");

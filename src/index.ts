@@ -5,7 +5,7 @@ import { Connection, Server, WSMessage } from 'partyserver';
 import crypto from "crypto";
 
 const honoApp = new Hono();
-honoApp.use('*', partyserverMiddleware({ onError: (error) => console.error(error)}));
+honoApp.use('*', partyserverMiddleware({ onError: (error) => console.error(error), options: { prefix: "ws" }}));
 
 const apiApp = honoApp.basePath('/api');
 apiApp.use('*', cors())
@@ -13,6 +13,7 @@ apiApp.use('*', cors())
 // Multiple party servers
 export class Chat extends Server {
   onConnect(connection: Connection) {
+    // this.name がRoom名
     console.log('Connected', connection.id, 'to server', this.name);
   }
 
