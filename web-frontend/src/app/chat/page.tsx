@@ -3,36 +3,22 @@
 import { useState, useRef, useEffect, CSSProperties, Suspense } from 'react';
 import { Send, Menu, Users, Hash, Settings, LogOut, Smile, Paperclip, MoreVertical, ArrowLeft } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { WebSocket } from "partysocket";
-import { usePartySocket } from "partysocket/react";
+import { WebSocket } from 'partysocket';
 import type { Message, User, Channel, CurrentUser, Room } from '../types';
 
 function ChatContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const roomId = searchParams.get('roomId');
-  const socket = usePartySocket({
-    host: "localhost:8787",
-    party: "chat",
-    room: "general",
-    prefix: "ws",
-  });
-  socket.onopen = (event) => {
-    console.log("open");
-    console.log(event);
-    socket.send("hello");
-  }
-  socket.onmessage = (event) => {
+
+  // wss://serverHost/prefix/party名/room名
+  const ws = new WebSocket(`${process.env.NEXT_PUBLIC_WEBSCOKET_ROOT_URL}/chat/${roomId}`);
+  ws.onopen = (event) => {
+    ws.send('hello!');
+  };
+  ws.onmessage = (event) => {
     console.log(`onmessage:${event.data}`);
-    console.log(event);
-  }
-  /*
-  const ws = new WebSocket(`${process.env.NEXT_PUBLIC_WEBSCOKET_ROOT_URL}`);
-  ws.addEventListener("open", () => {
-    console.log("open")
-    ws.send("hello!");
-  });
-  */
+  };
 
   const [messages, setMessages] = useState<Message[]>([
     { id: 1, text: 'みなさん、こんにちは！', sender: '田中太郎', avatar: '🧑', time: '10:30', color: '#3b82f6' },
