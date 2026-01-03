@@ -19,20 +19,19 @@ export default function LoginPage() {
     }
   }, [loginUserData]);
 
-  const handleLogin = (e: React.FormEvent): void => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (username.trim()) {
       const avatars = ['😊', '🙂', '😎', '🤓', '🥳', '🤗', '😇'];
       const randomAvatar = avatars[Math.floor(Math.random() * avatars.length)];
       const userData: User = {
+        id: loginUserData?.id,
         name: username,
         avatar: randomAvatar,
         status: 'online',
       };
-      setLoginUserData(userData);
-      axios.post(`${process.env.NEXT_PUBLIC_API_ROOT_URL}/account/signin`, userData).then((response) => {
-        setLoginUserData(response.data);
-      });
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_ROOT_URL}/account/signin`, userData);
+      setLoginUserData(response.data);
       // ルーム一覧へ遷移
       router.push('/rooms');
     }

@@ -123,7 +123,7 @@ apiApp.get('/rooms/:roomId/:channelId/messages', (c) => {
 
 apiApp.post('/account/signin', async (c) => {
   const userData = await c.req.json();
-  userData.uuid = crypto.randomUUID();
+  userData.id = crypto.randomUUID();
   return c.json(userData);
 });
 
