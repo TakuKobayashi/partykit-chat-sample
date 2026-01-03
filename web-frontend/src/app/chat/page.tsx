@@ -8,7 +8,7 @@ import { loginUserDataAtom } from '../atoms/users';
 import { useAtom } from 'jotai';
 import { WebSocket } from 'partysocket';
 import axios from 'axios';
-import type { Message, User, Channel, CurrentUser } from '../types';
+import type { Message, User, Channel } from '../types';
 
 function ChatContent() {
   const router = useRouter();
