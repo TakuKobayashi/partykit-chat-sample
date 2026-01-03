@@ -3,7 +3,8 @@
 import { useState, useRef, useEffect, CSSProperties, Suspense } from 'react';
 import { Send, Menu, Users, Hash, Settings, LogOut, Smile, Paperclip, MoreVertical, ArrowLeft } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { selectedRoom, selectChannel } from '../atoms/rooms';
+import { selectedRoomAtom, selectChannelAtom } from '../atoms/rooms';
+import { loginUserDataAtom } from '../atoms/users';
 import { useAtom } from 'jotai';
 import { WebSocket } from 'partysocket';
 import axios from 'axios';
@@ -11,25 +12,23 @@ import type { Message, User, Channel, CurrentUser } from '../types';
 
 function ChatContent() {
   const router = useRouter();
-  const [currentRoom, setCurrentRoom] = useAtom(selectedRoom);
-  const [currentChannel, setCurrentChannel] = useAtom(selectChannel);
+  const [currentRoom, setCurrentRoom] = useAtom(selectedRoomAtom);
+  const [currentChannel, setCurrentChannel] = useAtom(selectChannelAtom);
   const searchParams = useSearchParams();
   const roomId = searchParams.get('roomId');
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState<string>('');
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
-  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
+  const [loginUserData, setLoginUserData] = useAtom(loginUserDataAtom);
   const [onlineUsers, setOnlineUsers] = useState<User[]>([]);
   const [channels, setChannels] = useState<Channel[]>([]);
   const [isTyping] = useState<string[]>(['山田花子']);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const userData = window.localStorage.getItem('login_user_data');
-    if (!userData) {
+    if (!loginUserData || !loginUserData.id || loginUserData.status === 'away') {
       router.push('/');
-      return;
     }
     // wss://serverHost/prefix/party名/room名
     const ws = new WebSocket(`${process.env.NEXT_PUBLIC_WEBSCOKET_ROOT_URL}/chat/${roomId}`);
@@ -39,7 +38,6 @@ function ChatContent() {
     ws.onmessage = (event) => {
       console.log(`onmessage:${event.data}`);
     };
-    setCurrentUser(JSON.parse(userData));
     axios
       .get(`${process.env.NEXT_PUBLIC_API_ROOT_URL}/rooms/${roomId}/channels`)
       .then((response) => {
@@ -71,14 +69,12 @@ function ChatContent() {
   }, [messages]);
 
   const handleSend = (): void => {
-    if (input.trim() && currentUser) {
+    if (input.trim() && loginUserData) {
       const newMessage: Message = {
-        id: messages.length + 1,
         text: input,
-        sender: currentUser.name,
-        avatar: currentUser.avatar,
+        sender: loginUserData.name,
+        avatar: loginUserData.avatar,
         time: new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }),
-        color: currentUser.color,
       };
       setMessages([...messages, newMessage]);
       setInput('');
@@ -93,7 +89,10 @@ function ChatContent() {
   };
 
   const handleLogout = (): void => {
-    window.localStorage.removeItem('login_user_data');
+    //window.localStorage.removeItem('login_user_data');
+    if (loginUserData) {
+      setLoginUserData({ ...loginUserData, status: 'away' });
+    }
     setCurrentRoom(null);
     router.push('/');
   };
@@ -121,7 +120,7 @@ function ChatContent() {
     });
   };
 
-  if (!currentUser) {
+  if (!loginUserData) {
     return null;
   }
 
@@ -195,7 +194,7 @@ function ChatContent() {
               <div style={styles.messageAvatar}>{message.avatar}</div>
               <div style={styles.messageContent}>
                 <div style={styles.messageHeader}>
-                  <span style={{ ...styles.messageSender, color: message.color }}>{message.sender}</span>
+                  <span style={{ ...styles.messageSender, color: '#a855f7' }}>{message.sender}</span>
                   <span style={styles.messageTime}>{message.time}</span>
                 </div>
                 <div style={styles.messageText}>{message.text}</div>

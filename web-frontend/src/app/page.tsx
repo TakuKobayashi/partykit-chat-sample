@@ -1,28 +1,38 @@
 'use client';
 
-import { useState, CSSProperties } from 'react';
+import { useState, useEffect, CSSProperties } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
+import { useAtom } from 'jotai';
+import { loginUserDataAtom } from './atoms/users';
+import { User } from './types';
 
 export default function LoginPage() {
   const [username, setUsername] = useState<string>('');
+  const [loginUserData, setLoginUserData] = useAtom(loginUserDataAtom);
   const router = useRouter();
+
+  useEffect(() => {
+    if (loginUserData && loginUserData.id && loginUserData.status === 'online') {
+      router.push('/rooms');
+    }
+  }, [loginUserData]);
 
   const handleLogin = (e: React.FormEvent): void => {
     e.preventDefault();
     if (username.trim()) {
       const avatars = ['😊', '🙂', '😎', '🤓', '🥳', '🤗', '😇'];
       const randomAvatar = avatars[Math.floor(Math.random() * avatars.length)];
-      const userData = {
+      const userData: User = {
         name: username,
         avatar: randomAvatar,
-        color: '#a855f7',
+        status: 'online',
       };
+      setLoginUserData(userData);
       axios.post(`${process.env.NEXT_PUBLIC_API_ROOT_URL}/account/signin`, userData).then((response) => {
-        window.localStorage.setItem('login_user_data', JSON.stringify(response.data));
+        setLoginUserData(response.data);
       });
-      window.localStorage.setItem('login_user_data', JSON.stringify(userData));
       // ルーム一覧へ遷移
       router.push('/rooms');
     }

@@ -1,13 +1,13 @@
 export interface Message {
-  id: string;
+  id?: string;
   text: string;
   sender: string;
   avatar: string;
   time: string;
-  color: string;
 }
 
 export interface User {
+  id?: string;
   name: string;
   avatar: string;
   status: 'online' | 'away';
@@ -29,13 +29,6 @@ export interface Channel {
   icon: string;
   unread: number;
   active: boolean;
-}
-
-export interface CurrentUser {
-  id: string;
-  name: string;
-  avatar: string;
-  color: string;
 }
 
 export type Screen = 'login' | 'roomList' | 'chat';

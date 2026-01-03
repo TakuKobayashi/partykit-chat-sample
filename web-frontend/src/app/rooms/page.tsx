@@ -1,25 +1,23 @@
 'use client';
 
-import { useState, useEffect, CSSProperties } from 'react';
+import { useEffect, CSSProperties } from 'react';
 import { Users, Lock, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAtom } from 'jotai';
 import axios from 'axios';
-import { rooms, selectedRoom } from '../atoms/rooms';
-import type { Room, CurrentUser } from '../types';
+import { roomsAtom, selectedRoomAtom } from '../atoms/rooms';
+import { loginUserDataAtom } from '../atoms/users';
+import type { Room } from '../types';
 
 export default function RoomsPage() {
-  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
-  const [availableRooms, setAvailableRooms] = useAtom(rooms);
-  const [selectRoom, setSelectRoom] = useAtom(selectedRoom);
+  const [availableRooms, setAvailableRooms] = useAtom(roomsAtom);
+  const [selectRoom, setSelectRoom] = useAtom(selectedRoomAtom);
+  const [loginUserData, setLoginUserData] = useAtom(loginUserDataAtom);
   const router = useRouter();
 
   useEffect(() => {
-    const userData = window.localStorage.getItem('login_user_data');
-    if (!userData) {
+    if (!loginUserData || !loginUserData.id || loginUserData.status === 'away') {
       router.push('/');
-    } else {
-      setCurrentUser(JSON.parse(userData));
     }
     if (availableRooms.length <= 0) {
       axios.get(`${process.env.NEXT_PUBLIC_API_ROOT_URL}/rooms`).then((response) => {
@@ -33,7 +31,7 @@ export default function RoomsPage() {
     router.push(`/chat?roomId=${encodeURIComponent(room.id)}`);
   };
 
-  if (!currentUser) {
+  if (!loginUserData) {
     return null;
   }
 
@@ -45,8 +43,8 @@ export default function RoomsPage() {
           <p style={styles.subtitle}>参加したいルームを選択してください</p>
         </div>
         <div style={styles.userBadge}>
-          <div style={styles.userBadgeAvatar}>{currentUser.avatar}</div>
-          <span style={styles.userBadgeName}>{currentUser.name}</span>
+          <div style={styles.userBadgeAvatar}>{loginUserData.avatar}</div>
+          <span style={styles.userBadgeName}>{loginUserData.name}</span>
         </div>
       </div>
 
