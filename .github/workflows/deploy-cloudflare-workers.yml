@@ -28,6 +28,14 @@ jobs:
     - name: frontend yarn install
       working-directory: ${{ matrix.frontend-root-project-path }}
       run: yarn install
+    - name: Register frontend .env
+      working-directory: ${{ matrix.frontend-root-project-path  }}
+      env:
+        NEXT_PUBLIC_API_ROOT_URL: ${{ secrets.NEXT_PUBLIC_API_ROOT_URL }}
+        NEXT_PUBLIC_WEBSCOKET_ROOT_URL: ${{ secrets.NEXT_PUBLIC_WEBSCOKET_ROOT_URL }}
+      run: |
+        echo "NEXT_PUBLIC_API_ROOT_URL=${NEXT_PUBLIC_API_ROOT_URL}" >> ./.env
+        echo "NEXT_PUBLIC_WEBSCOKET_ROOT_URL=${NEXT_PUBLIC_WEBSCOKET_ROOT_URL}" >> ./.env
     - name: frontend build
       working-directory: ${{ matrix.frontend-root-project-path }}
       run: yarn run build
